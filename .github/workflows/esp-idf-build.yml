@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           . /opt/esp/idf/export.sh
-          idf.py merge-bin -o proxmark5_bwm_allinone.bin -f raw
+          idf.py merge-bin -o "$GITHUB_WORKSPACE/proxmark5_bwm_allinone.bin" -f raw
 
       - name: Prepare packaged files
         id: package
@@ -70,7 +70,28 @@ jobs:
           ARTIFACT_PREFIX="proxmark5_bwm_${GITHUB_REF_NAME:-${GITHUB_SHA}}"
           ARTIFACT_PREFIX="${ARTIFACT_PREFIX//\//_}"
 
-          cp proxmark5_bwm_allinone.bin dist/
+          MERGED_BIN=""
+          if [ -f proxmark5_bwm_allinone.bin ]; then
+            MERGED_BIN="proxmark5_bwm_allinone.bin"
+          elif [ -f build/proxmark5_bwm_allinone.bin ]; then
+            MERGED_BIN="build/proxmark5_bwm_allinone.bin"
+          fi
+
+          if [ -z "$MERGED_BIN" ]; then
+            echo "Merged firmware not found in expected paths. Try merge again in this step."
+            . /opt/esp/idf/export.sh
+            idf.py merge-bin -o dist/proxmark5_bwm_allinone.bin -f raw
+
+            if [ -f dist/proxmark5_bwm_allinone.bin ]; then
+              MERGED_BIN="dist/proxmark5_bwm_allinone.bin"
+            else
+              echo "Merged firmware still not found. Checked: proxmark5_bwm_allinone.bin, build/proxmark5_bwm_allinone.bin, dist/proxmark5_bwm_allinone.bin"
+              exit 1
+            fi
+          fi
+
+          cp "$MERGED_BIN" dist/proxmark5_bwm_allinone.bin
+          cp dist/proxmark5_bwm_allinone.bin proxmark5_bwm_allinone.bin
 
           if [ -f build/proxmark5_ble_wifi_module.bin ]; then cp build/proxmark5_ble_wifi_module.bin dist/; fi
           if [ -f build/proxmark5_ble_wifi_module.elf ]; then cp build/proxmark5_ble_wifi_module.elf dist/; fi
