@@ -24,20 +24,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup ESP-IDF environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f /opt/esp/idf/export.sh ]; then
+            echo "ESP-IDF export script not found at /opt/esp/idf/export.sh"
+            exit 1
+          fi
+          . /opt/esp/idf/export.sh
+          command -v idf.py
+
       - name: Show ESP-IDF version
         shell: bash
         run: |
+          . /opt/esp/idf/export.sh
           idf.py --version
 
       - name: Build firmware
         shell: bash
         run: |
+          . /opt/esp/idf/export.sh
           idf.py set-target esp32c2
           idf.py build
 
       - name: Merge firmware
         shell: bash
         run: |
+          . /opt/esp/idf/export.sh
           idf.py merge-bin -o proxmark5_bwm_allinone.bin -f raw
 
       - name: Prepare packaged files
