@@ -1,0 +1,38 @@
+menu "Proxmark5 BLE/WiFi Module Configuration"
+
+    config UART_SPP_NUM
+        int "Uart NUM for SPP server"
+        # UART0 is used for flashing, debugging, and log monitoring.
+        # It is best not to reuse it for other purposes unless special handling is added.
+        # UART1 is also available, so the default is UART1.
+        default 1
+
+    config UART_SPP_TXP
+        int "Tx pin num for SPP server"
+        # TX pin for the UART passthrough channel
+        default 4
+
+    config UART_SPP_RXP
+        int "Rx pin num for SPP server"
+        # RX pin for the UART passthrough channel
+        default 10
+
+    config CMD_PAYLOAD_SIZE
+        int "Max size of payload of uart"
+        # Payload size of the UART communication packet
+        default 4096
+
+    config WIFI_SCAN_LIST_SIZE
+        int "Max size of wifi scan list"
+        range 0 20
+        default 10
+        help
+            The size of array that will be used to retrieve the list of access points.
+
+    config DEVICE_IDENTIFIER
+        string "Device identifier"
+        default "Proxmark5"
+        help
+            The device identifier is used as the like hostname on network or BLE name.
+
+endmenu

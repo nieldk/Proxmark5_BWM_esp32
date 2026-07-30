@@ -1,0 +1,12 @@
+# 此分区表配置适用于2M大小的FLASH的硬件，仅用于前期开发测试基础功能，
+# 且无法用于测试OTA相关的功能，后期应当在4M大小FLASH的硬件上进行开发测试
+# 且严重警告，后期切勿使用此配置进行任何生产，此配置并无OTA能力！
+#
+# 假设二级bl（32k） + 分区表(4k) + nvs（144K） + otadata（8k） + phy_init（4k） + factory固件（1856k）
+# 最终计算出 总大小为：2048k，也就是2M刚刚好
+# 
+# Name,     Type,    SubType,    Offset,    Size,       Flags
+nvs,        data,    nvs,        ,          0x24000,
+otadata,    data,    ota,        ,          0x2000,
+phy_init,   data,    phy,        ,          0x1000,
+factory,    app,     factory,    ,          0x1D0000,
