@@ -104,8 +104,7 @@ jobs:
           cp -f build/flash_args dist/ || true
           cp -f build/flash_project_args dist/ || true
 
-          (cd dist && zip -r "${ARTIFACT_PREFIX}.zip" .)
-          cp "dist/${ARTIFACT_PREFIX}.zip" .
+          (cd dist && zip -r "../${ARTIFACT_PREFIX}.zip" .)
 
           echo "artifact_prefix=${ARTIFACT_PREFIX}" >> "$GITHUB_OUTPUT"
 
@@ -113,10 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package.outputs.artifact_prefix }}
-          path: |
-            proxmark5_bwm_allinone.bin
-            ${{ steps.package.outputs.artifact_prefix }}.zip
-            dist/**
+          path: dist/*
           if-no-files-found: error
 
       - name: Upload release asset
