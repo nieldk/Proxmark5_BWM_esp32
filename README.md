@@ -1,6 +1,6 @@
 ﻿# Proxmark5 Battery Wireless Module
 
-This board integrates an ESP32-C2, a coulomb counter IC, and a charger IC to provide the Proxmark5 with wireless connectivity and safe, efficient battery charging and power management.
+This board integrates an ESP32-C2, a lithium battery fuel gauge IC, and a charger IC to provide the Proxmark5 with wireless connectivity and safe, efficient battery charging and power management.
 
 ![BWM](./resources/bwm.jpg)
 
@@ -17,7 +17,7 @@ This board integrates an ESP32-C2, a coulomb counter IC, and a charger IC to pro
 
 ## Hardware Design
 
-Refer to the schematic: [Proxmark5 BWM SCH](./SCH.pdf)
+Refer to the schematic: [Proxmark5 BWM SCH](./resources/SCH.pdf)
 
 # Installation on Proxmark5
 
