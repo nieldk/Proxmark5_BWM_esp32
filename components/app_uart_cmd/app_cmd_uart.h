@@ -11,7 +11,7 @@
 #define UART_RXD_PIN           (CONFIG_UART_SPP_RXP)
 #define UART_BAUD_RATE_DEFAULT 460800   // Default communication baud rate, max supported depends on CONFIG_SOC_UART_BITRATE_MAX
 #define UART_RX_TIMEOUT        200      // Receive timeout in milliseconds, needs tuning; too short may falsely timeout normal packets, too long may waste resources on incomplete packets
-#define UART_RX_BUF_SIZE       4096     // This is UART receive internal buffer queue size, usually sufficient for processing while receiving
+#define UART_RX_BUF_SIZE       32768    // Must hold the AT32's max in-flight forward bytes (BWM_FC_WINDOW * ~4136 B PM5 frame) while this task is blocked in a slow app_ble_send/app_tcp_server_send; the old 4096 was smaller than a SINGLE PM5 frame (PM3_CMD_DATA_SIZE=4064), so any sizeable LF transfer overran it -> UART_BUFFER_FULL -> reset_on_error -> uart_flush_input -> app_com desync
 #define UART_TX_BUF_SIZE       0        // Important: with TX BUF=0, uart_write_bytes call blocks waiting
 #define UART_EVENT_QUEUE_SZ    10       // UART event queue length, tune based on use; too small may lose events, too large wastes memory
 
