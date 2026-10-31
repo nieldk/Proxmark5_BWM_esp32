@@ -139,7 +139,7 @@ jobs:
       # Rolling "latest" release used by `hw bwm upgrade --online`.
       # The tag points at an unrelated empty commit so `git describe` never sees it.
       - name: Move rolling latest tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/online')
         shell: bash
         run: |
           git config --global user.name "github-actions"
@@ -149,7 +149,7 @@ jobs:
           git push -f origin refs/tags/latest
 
       - name: Publish rolling latest release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/online')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
