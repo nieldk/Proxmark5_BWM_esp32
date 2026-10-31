@@ -28,10 +28,13 @@ jobs:
           fetch-tags: true
 
       - name: Allow git in container
+        id: ver
         shell: bash
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          echo "Firmware version: $(git describe --always --tags --dirty)"
+          VERSION="$(git describe --always --tags --dirty)"
+          echo "Firmware version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Setup ESP-IDF environment
         shell: bash
@@ -132,3 +135,24 @@ jobs:
             ${{ steps.package.outputs.artifact_prefix }}.zip
             dist/proxmark5_ble_wifi_module.bin
             dist/proxmark5_bwm_allinone.bin
+
+      # Rolling "latest" release used by `hw bwm upgrade --online`.
+      # The tag points at an unrelated empty commit so `git describe` never sees it.
+      - name: Move rolling latest tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        shell: bash
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          EMPTY_TREE="$(git hash-object -t tree /dev/null)"
+          git tag -f latest "$(git commit-tree "$EMPTY_TREE" -m "rolling latest")"
+          git push -f origin refs/tags/latest
+
+      - name: Publish rolling latest release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: ${{ steps.ver.outputs.version }}
+          prerelease: true
+          files: dist/proxmark5_ble_wifi_module.bin
