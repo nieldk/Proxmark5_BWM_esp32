@@ -67,6 +67,47 @@ jobs:
           idf.py set-target esp32c2
           idf.py build
 
+      # Best-effort: list symbols in the closed-source BT controller lib that
+      # sound CRC/frame-length related, for the zb_probe WazaBee port. No
+      # public register map exists for this lib, so this is just a symbol
+      # name grep, not disassembly. Never fails the build.
+      - name: Scan BT controller lib for CRC/length-related symbols
+        if: always()
+        shell: bash
+        run: |
+          set -uo pipefail
+          . /opt/esp/idf/export.sh
+          OUT="$GITHUB_WORKSPACE/btlib_symbols.txt"
+          : > "$OUT"
+          BTLIB_DIR="$IDF_PATH/components/bt/controller/lib_esp32c2/esp32c2-bt-lib"
+          if [ ! -d "$BTLIB_DIR" ]; then
+            echo "not found: $BTLIB_DIR" >> "$OUT"
+          else
+            for a in "$BTLIB_DIR"/*.a; do
+              [ -f "$a" ] || continue
+              echo "== $(basename "$a") ==" >> "$OUT"
+              workdir=$(mktemp -d)
+              (cd "$workdir" && ar x "$a")
+              riscv32-esp-elf-nm --defined-only "$workdir"/*.o 2>/dev/null \
+                | grep -iE "crc|maxlen|max_pdu|whiten|rxmaxbuf|hopc|ratecntl" >> "$OUT"
+              rm -rf "$workdir"
+              echo "" >> "$OUT"
+            done
+          fi
+          if [ -f build/proxmark5_ble_wifi_module.map ]; then
+            echo "== libble_app variant actually linked (from .map) ==" >> "$OUT"
+            grep -i "libble_app" build/proxmark5_ble_wifi_module.map >> "$OUT"
+          fi
+          cat "$OUT"
+
+      - name: Upload BT lib symbol scan
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: btlib-symbols-idf-${{ matrix.idf }}
+          path: btlib_symbols.txt
+          if-no-files-found: warn
+
       - name: Merge firmware
         shell: bash
         run: |
