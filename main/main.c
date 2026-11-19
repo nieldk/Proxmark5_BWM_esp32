@@ -30,6 +30,7 @@
 #include "app_ota_ops.h"
 #include "main_settings.h"
 #include "app_power.h"
+#include "app_zb_probe.h"
 
 
 // Casts pointer p to type t and dereferences it to return the value.
@@ -1953,6 +1954,41 @@ static void on_uart_cmd_complete(PacketType_t type, uint16_t cmd, uint8_t *p_dat
             s_fwd_tagged = (p_data[0] != 0);
             uint8_t applied = s_fwd_tagged ? 1 : 0;
             app_uart_send_response(cmd, &applied, sizeof(applied));
+            break;
+        }
+
+        // EXPERIMENTAL: see app_zb_probe.h. Packs app_zb_probe_regs_t the same way for both
+        // the one-shot GET_REGS response and the periodic APP_BROADCAST_ZB_PROBE_REGS push.
+        case APP_CMD_ZB_PROBE_START: {
+            if (length != 7) {
+                uart_cmd_error_report(cmd, ESP_ERR_INVALID_ARG);
+                break;
+            }
+            uint32_t access_addr;
+            uint16_t duration_s;
+            uint8_t ble_channel = p_data[4];
+            memcpy(&access_addr, p_data, 4);
+            memcpy(&duration_s, p_data + 5, 2);
+            app_ble_stop(); // BLE SPP cannot share the controller with the probe
+            esp_err_t err = app_zb_probe_start(access_addr, ble_channel, duration_s);
+            uint8_t status = (err == ESP_OK) ? 0 : 1;
+            app_uart_send_response(cmd, &status, sizeof(status));
+            break;
+        }
+
+        case APP_CMD_ZB_PROBE_STOP: {
+            esp_err_t err = app_zb_probe_stop();
+            uint8_t status = (err == ESP_OK) ? 0 : 1;
+            app_uart_send_response(cmd, &status, sizeof(status));
+            break;
+        }
+
+        case APP_CMD_ZB_PROBE_GET_REGS: {
+            app_zb_probe_regs_t regs;
+            app_zb_probe_get_regs(&regs);
+            uint8_t payload[APP_ZB_PROBE_WIRE_LEN];
+            app_zb_probe_pack_regs(&regs, payload);
+            app_uart_send_response(cmd, payload, sizeof(payload));
             break;
         }
 

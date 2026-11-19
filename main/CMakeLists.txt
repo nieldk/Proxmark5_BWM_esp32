@@ -24,6 +24,7 @@ set(components
     app_wifi_sntp 
     app_wifi_netif_cfg
     app_wifi_mdns
+    app_zb_probe
     spi_flash
     efuse
     esp_timer

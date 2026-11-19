@@ -10,6 +10,7 @@ typedef enum {
     APP_BROADCAST_CMD_ERROR                     = 8091,    // Command execution failure report; payload is cmd(uint16) + err(int32)
     APP_BROADCAST_LINK_STATE                    = 8092,    // Wireless client link state; payload ble(uint8) + wifi(uint8), 1 = a client is connected. Sent on every change.
     APP_BROADCAST_DATA_FORWARD_FROM             = 8093,    // Transparent-forward data with its source, sent instead of DATA_FORWARD once the host enabled APP_CMD_SET_FORWARD_TAGGED; payload ep(uint8, 0 = BLE, 1 = WiFi) + data
+    APP_BROADCAST_ZB_PROBE_REGS                 = 8094,    // EXPERIMENTAL: zb_probe periodic snapshot; see app_zb_probe_pack_regs() for the 70-byte wire layout (PHY regs, candidate RX buffer ptr/aux, a bounds-checked 32-byte read from it, running flag)
 } app_broadcast_type_t;
 
 
@@ -290,6 +291,15 @@ typedef enum {
     APP_CMD_SEND_FORWARD_DATA                   = 5000,    // Send forward data; destination (BLE or WiFi) depends on current forward mode config
     APP_CMD_SEND_FORWARD_DATA_TO                      ,    // Send forward data to one endpoint; payload ep(uint8, 0 = BLE, 1 = WiFi) + data; acked like SEND_FORWARD_DATA
     APP_CMD_SET_FORWARD_TAGGED                        ,    // Tag inbound forward data with its endpoint (APP_BROADCAST_DATA_FORWARD_FROM); payload uint8 0/1, response = applied. Cleared by a UART baud query/set (host link re-init) and on reboot
+
+    /*
+     * EXPERIMENTAL: ESP32-C2 BLE PHY / 802.15.4 receive-feasibility probe; codes start at 6000.
+     * Takes the BLE controller away from BLE SPP while running -- see app_zb_probe.h.
+     * No stable output format is guaranteed between firmware builds while this stays experimental.
+     */
+    APP_CMD_ZB_PROBE_START                      = 6000,    // Start the probe; payload access_addr(uint32 LE) + ble_channel(uint8, real RF channel 0-39) + duration_s(uint16 LE, 0 or >300 clamped to 300); response = status(uint8) 0=ok
+    APP_CMD_ZB_PROBE_STOP                             ,    // Stop the probe and release the BLE controller; response = status(uint8) 0=ok
+    APP_CMD_ZB_PROBE_GET_REGS                         ,    // One-shot register snapshot; response is the same payload as APP_BROADCAST_ZB_PROBE_REGS
 
 } app_command_code_t;
 
